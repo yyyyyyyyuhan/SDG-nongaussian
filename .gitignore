@@ -1,0 +1,30 @@
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+#simulation results
+*.rds
+data/simulated/
+results/intermediate/
+
+# system files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# LaTeX auxiliary files
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.toc
