@@ -3,8 +3,8 @@
 # M-step: SCAD-penalized CGD for Gamma; glasso for Theta.
 #
 # Requires:
-#   R/common/utils.R       (make_pd, scad_prox, run_cgd_scad)
-#   R/common/evaluation.R  (calc_metrics, only used downstream)
+# R/common/utils.R      
+# R/common/evaluation.R  
 
 library(glasso)
 library(truncnorm)
@@ -16,7 +16,7 @@ mcem_cgd_binary <- function(Y_list,
                             ebic_gamma = 0.5, tol = 1e-2,
                             gamma_init = NULL, theta_init = NULL) {
 
-  # warm-start regularization: small lambdas in early iters
+  # warm-start regularization, small lambdas in early iters
   early_lambda_gamma <- 0.05
   early_lambda_theta <- 0.05
   early_iter_gamma <- 5
@@ -45,7 +45,7 @@ mcem_cgd_binary <- function(Y_list,
                                                   Q = diag(1, p_dim),
                                                   a1 = rep(0, p_dim),
                                                   P1 = diag(p1_scale, p_dim)),
-                         H = diag(1, p_dim))
+                                                  H = diag(1, p_dim))
 
   conv_hist_gamma <- rep(NA, max_iter)
   conv_hist_theta <- rep(NA, max_iter)
@@ -75,7 +75,6 @@ mcem_cgd_binary <- function(Y_list,
       kept <- 0
 
       for (m in seq_len(total_draws)) {
-        # truncated-normal step: latent Z* given current Z_curr and Y
         Z_star <- matrix(0, T_len, p_dim)
 
         for (j in seq_len(p_dim)) {
@@ -83,18 +82,15 @@ mcem_cgd_binary <- function(Y_list,
           idx0 <- which(Y_curr[, j] == 0)
 
           if (length(idx1) > 0) {
-            Z_star[idx1, j] <- truncnorm::rtruncnorm(length(idx1), a = 0, b = Inf,
-                                                     mean = Z_curr[idx1, j], sd = 1)
+            Z_star[idx1, j] <- truncnorm::rtruncnorm(length(idx1), a = 0, b = Inf, mean = Z_curr[idx1, j], sd = 1)
           }
 
           if (length(idx0) > 0) {
-            Z_star[idx0, j] <- truncnorm::rtruncnorm(length(idx0), a = -Inf, b = 0,
-                                                     mean = Z_curr[idx0, j], sd = 1)
+            Z_star[idx0, j] <- truncnorm::rtruncnorm(length(idx0), a = -Inf, b = 0, mean = Z_curr[idx0, j], sd = 1)
           }
         }
 
-        model_curr <- model
-        model_curr$y <- Z_star
+        model_curr <- model; model_curr$y <- Z_star
 
         sim <- KFAS::simulateSSM(model_curr, type = "states", nsim = 1, conditional = TRUE)
 
@@ -106,7 +102,7 @@ mcem_cgd_binary <- function(Y_list,
 
         Z_curr <- Z_draw
 
-        # accumulate sufficient statistics post burn-in
+        # accumulate sufficient statistics
         if (m > burn_in) {
           Z_t   <- Z_draw[2:T_len, , drop = FALSE]
           Z_tm1 <- Z_draw[1:(T_len - 1), , drop = FALSE]
@@ -130,8 +126,7 @@ mcem_cgd_binary <- function(Y_list,
     # Gamma update
     eff_lam_gamma <- if (iter <= early_iter_gamma) early_lambda_gamma else lambda_gamma
 
-    Beta_new <- run_cgd_scad(XtX = s_xtx, XtY = t(s_xty),
-                             Beta_init = t(Gamma), lambda = eff_lam_gamma, n = N_eff)
+    Beta_new <- run_cgd_scad(XtX = s_xtx, XtY = t(s_xty), Beta_init = t(Gamma), lambda = eff_lam_gamma, n = N_eff)
     Gamma <- t(Beta_new)
 
     # Theta update
@@ -143,9 +138,7 @@ mcem_cgd_binary <- function(Y_list,
     eff_lam_theta <- if (iter <= early_iter_theta) early_lambda_theta else lambda_theta
 
     g_fit <- tryCatch(glasso::glasso(S_cov, rho = eff_lam_theta),
-                      error = function(e) {
-                        glasso::glasso(make_pd(S_cov, ridge = 1e-6 * 10), rho = eff_lam_theta)
-                      })
+                      error = function(e) {glasso::glasso(make_pd(S_cov, ridge = 1e-6 * 10), rho = eff_lam_theta)})
 
     Theta <- make_pd(g_fit$wi, ridge = 1e-6)
 
