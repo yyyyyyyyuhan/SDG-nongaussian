@@ -22,10 +22,5 @@ generate_data <- function(n_subjects = 50, T_len = 50, p_dim = 10, structure_typ
     Y_list[[i]] <- (W > 0) * 1
   }
 
-  list(
-    Y_list = Y_list,
-    True_Omega = Omega,
-    True_Theta = Theta,
-    True_Gamma = Gamma
-  )
+  list(Y_list = Y_list,True_Omega = Omega,True_Theta = Theta,True_Gamma = Gamma)
 }
