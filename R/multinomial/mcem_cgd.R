@@ -159,12 +159,7 @@ estep_multinom_mcem <- function(Y, Gamma, Theta, n_samples,
     for (t in 1:T_len) {
       p_t <- softmax_baseline(Zs[t, ])
       ll_mult <- ll_mult + sum(Y[t, ] * log(p_t))
-      ll_pseudo <- ll_pseudo + mvtnorm::dmvnorm(
-        x = Y_tilde_last[t, ],
-        mean = Zs[t, ],
-        sigma = R_list_last[[t]],
-        log = TRUE
-      )
+      ll_pseudo <- ll_pseudo + mvtnorm::dmvnorm(x = Y_tilde_last[t, ],mean = Zs[t, ],sigma = R_list_last[[t]],log = TRUE)
     }
 
     logw[s] <- ll_mult - ll_pseudo
@@ -246,9 +241,6 @@ estep_multinom_mcem <- function(Y, Gamma, Theta, n_samples,
 mcem_cgd_multinom <- function(Y_list,lambda_gamma, lambda_theta,
                               n_samples = 100, max_iter = 30, ebic_gamma = 0.5,
                               tol = 1e-2, gamma_init = NULL, theta_init = NULL) {
-  
-  max_inner <- 30;tol_inner <- 1e-5;ridge <- 1e-6
-
   Y_list <- lapply(Y_list, as.matrix)
   K <- ncol(Y_list[[1]])
   if (K < 2) stop("Need at least 2 categories.")
@@ -300,8 +292,7 @@ mcem_cgd_multinom <- function(Y_list,lambda_gamma, lambda_theta,
       estep_i <- estep_multinom_mcem(Y = Y_list[[i]],
                                      Gamma = Gamma, Theta = Theta,
                                      n_samples = n_samples,Z_init = Z_init_list[[i]],
-                                     m0 = m0, P0 = P0,
-                                     max_inner = max_inner,tol_inner = tol_inner,ridge = ridge)
+                                     m0 = m0, P0 = P0)
 
       estep_list[[i]] <- estep_i
       ess_vec[i] <- estep_i$ess
@@ -351,7 +342,6 @@ mcem_cgd_multinom <- function(Y_list,lambda_gamma, lambda_theta,
     conv_hist_theta[iter] <- diff_theta
 
     last_estep_list <- estep_list
-    # warm-start the next E-step's IRLS from the current posterior mean
     Z_init_list <- lapply(estep_list, function(x) x$Z_mean)
 
     Gamma_prev <- Gamma

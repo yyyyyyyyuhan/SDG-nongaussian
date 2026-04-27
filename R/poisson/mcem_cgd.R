@@ -152,7 +152,6 @@ mcem_cgd_poisson <- function(Y_list,lambda_gamma,lambda_theta,
     for (subj in seq_len(n_subjects)) {
       model_list[[subj]]$T[, , 1] <- Gamma
       model_list[[subj]]$Q[, , 1] <- Q_mat
-
       estep_out <- poisson_estep_subject(model_subj = model_list[[subj]],T_len = T_len,p_dim = p_dim,nsim = n_samples)
 
       s_xtx <- s_xtx + estep_out$s_xtx
@@ -167,7 +166,6 @@ mcem_cgd_poisson <- function(Y_list,lambda_gamma,lambda_theta,
 
     # Gamma update
     eff_lam_gamma <- if (iter <= early_iter_gamma) early_lambda_gamma else lambda_gamma
-
     Beta_new <- run_cgd_scad(XtX = s_xtx,XtY = t(s_xty),Beta_init = t(Gamma),lambda = eff_lam_gamma,n = N_eff)
     Gamma <- t(Beta_new)
 
@@ -175,7 +173,6 @@ mcem_cgd_poisson <- function(Y_list,lambda_gamma,lambda_theta,
     S_resid <- s_yty - s_xty %*% t(Gamma) - Gamma %*% t(s_xty) + Gamma %*% s_xtx %*% t(Gamma)
     S_resid <- make_pd(S_resid, ridge = 1e-6)
     S_cov <- make_pd(S_resid / N_eff, ridge = 1e-6)
-
     eff_lam_theta <- if (iter <= early_iter_theta) early_lambda_theta else lambda_theta
 
     g_fit <- tryCatch(glasso::glasso(S_cov, rho = eff_lam_theta),

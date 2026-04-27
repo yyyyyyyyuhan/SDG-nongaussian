@@ -176,5 +176,5 @@ mcem_cgd_binary <- function(Y_list,lambda_gamma, lambda_theta,
   }
 
   list(Gamma = Gamma, Theta = Theta, BIC = bic_score,
-       conv_gamma = conv_hist_gamma, conv_theta = conv_hist_theta, q_proxy = q_hist)
+       conv_gamma = conv_hist_gamma, conv_theta = conv_hist_theta)
 }
