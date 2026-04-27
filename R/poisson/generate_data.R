@@ -1,5 +1,8 @@
-# simulate Poisson outcomes via log link from the latent VAR(1) process.
-# requires R/common/structures.R to be sourced.
+# simulate Poisson outcomes
+#
+# Requires:
+# R/common/structures.R
+
 
 library(mvtnorm)
 
@@ -25,7 +28,6 @@ generate_data_poisson <- function(n_subjects = 50,
     Z_true <- simulate_latent_var1(T_len, p_dim, Gamma, Omega, burn_in = 50)
 
     log_lambda <- Z_true + intercept
-    # clip to avoid Inf rates
     log_lambda[log_lambda > 10] <- 10
     log_lambda[log_lambda < -10] <- -10
 
@@ -38,13 +40,8 @@ generate_data_poisson <- function(n_subjects = 50,
     Lambda_list[[i]] <- lambda_mat
   }
 
-  list(
-    Y_list = Y_list,
-    Z_list = Z_list,
-    Lambda_list = Lambda_list,
-    True_Omega = Omega,
-    True_Theta = Theta,
-    True_Gamma = Gamma,
-    Intercept = intercept
-  )
+  list(Y_list = Y_list,Z_list = Z_list,
+       Lambda_list = Lambda_list,
+       True_Omega = Omega,True_Theta = Theta,
+       True_Gamma = Gamma,Intercept = intercept)
 }

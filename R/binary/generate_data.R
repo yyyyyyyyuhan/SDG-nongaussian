@@ -1,5 +1,7 @@
 # simulate binary outcomes from the latent VAR(1) process
-# requires R/common/structures.R to be sourced.
+#
+# Requires:
+# R/common/structures.R
 
 library(mvtnorm)
 

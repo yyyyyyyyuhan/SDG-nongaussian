@@ -60,7 +60,6 @@ build_precision <- function(p_dim, structure_type) {
       stop("structure_type must be one of: AR1, AR2, Block, Star, Circle, Dense")
     }
 
-    # shift if not pd
     min_ev <- min(eigen(Theta, symmetric = TRUE)$values)
     if (min_ev <= 0.01) {
       shift <- abs(min_ev) + 0.1
@@ -73,7 +72,7 @@ build_precision <- function(p_dim, structure_type) {
   list(Theta = Theta, Omega = Omega)
 }
 
-# sparse Gamma with ~20% nonzeros, rescaled so spectral radius = 0.9
+# sparse Gamma 
 build_gamma <- function(p_dim, density = 0.2, target_spec_rad = 0.9) {
   Gamma <- matrix(0, p_dim, p_dim)
   n_nz <- round(p_dim * p_dim * density)
@@ -86,8 +85,7 @@ build_gamma <- function(p_dim, density = 0.2, target_spec_rad = 0.9) {
   Gamma
 }
 
-# simulate the latent VAR(1) process with Gaussian noise N(0, Omega), with burn-in.
-# returns the stationary segment of length T_len (matrix T_len x p_dim).
+# simulate the latent VAR(1) process with Gaussian noise 
 simulate_latent_var1 <- function(T_len, p_dim, Gamma, Omega, burn_in = 50) {
   total <- T_len + burn_in
   Z <- matrix(0, total, p_dim)

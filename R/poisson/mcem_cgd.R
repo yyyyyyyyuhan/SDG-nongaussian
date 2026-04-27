@@ -1,10 +1,10 @@
 # MCEM with CGD for Poisson outcomes.
-# E-step: importance sampling via KFAS::importanceSSM (Poisson observation family).
+# E-step: Poisson observation family.
 # M-step: SCAD-penalized CGD for Gamma; glasso for Theta.
 #
 # Requires:
-#   R/common/utils.R       (make_pd, scad_prox, run_cgd_scad)
-#   R/common/evaluation.R  (calc_metrics, only used downstream)
+# R/common/helper.R       
+# R/common/evaluation.R  
 
 library(glasso)
 library(KFAS)
@@ -29,7 +29,6 @@ normalize_weights <- function(w, nsim) {
   } else {
     w <- w / sw
   }
-
   w
 }
 
@@ -60,7 +59,6 @@ poisson_estep_subject <- function(model_subj, T_len, p_dim, nsim, max_try = 3) {
   d <- dim(samples)
   if (length(d) != 3) stop("importanceSSM samples do not have 3 dimensions.")
 
-  # KFAS sometimes returns p x T x nsim instead of T x p x nsim
   if (d[1] == T_len && d[2] == p_dim) {
     samples_use <- samples
   } else if (d[1] == p_dim && d[2] == T_len) {
@@ -98,21 +96,14 @@ poisson_estep_subject <- function(model_subj, T_len, p_dim, nsim, max_try = 3) {
 }
 
 
-mcem_cgd_poisson <- function(Y_list,
-                             lambda_gamma,
-                             lambda_theta,
-                             max_iter = 30,
-                             n_samples = 50,
-                             ebic_gamma = 0.5,
-                             tol = 1e-2,
-                             gamma_init = NULL,
-                             theta_init = NULL,
+mcem_cgd_poisson <- function(Y_list,lambda_gamma,lambda_theta,
+                             max_iter = 30,n_samples = 50,
+                             ebic_gamma = 0.5,tol = 1e-2,
+                             gamma_init = NULL,theta_init = NULL,
                              p1_scale = 20) {
 
-  early_lambda_gamma <- 0.05
-  early_lambda_theta <- 0.05
-  early_iter_gamma <- 5
-  early_iter_theta <- 5
+  early_lambda_gamma <- 0.05;early_lambda_theta <- 0.05
+  early_iter_gamma <- 5;early_iter_theta <- 5
 
   stopifnot(is.list(Y_list), length(Y_list) >= 1)
 
@@ -135,14 +126,13 @@ mcem_cgd_poisson <- function(Y_list,
 
   model_list <- lapply(seq_len(n_subjects), function(i) {
     y_subj <- Y_list[[i]]
-
     KFAS::SSModel(y_subj ~ -1 + SSMcustom(Z = diag(1, p_dim),
                                           T = Gamma,
                                           R = diag(1, p_dim),
                                           Q = diag(1, p_dim),
                                           a1 = rep(0, p_dim),
                                           P1 = diag(p1_scale, p_dim)),
-                  distribution = rep("poisson", p_dim))
+                                          distribution = rep("poisson", p_dim))
   })
 
   conv_hist_gamma <- rep(NA, max_iter)
@@ -153,7 +143,6 @@ mcem_cgd_poisson <- function(Y_list,
   for (iter in seq_len(max_iter)) {
     Q_mat <- tryCatch(solve(Theta), error = function(e) diag(1, p_dim))
     Q_mat <- make_pd(Q_mat, ridge = 1e-6)
-
     s_xtx <- matrix(0, p_dim, p_dim)
     s_xty <- matrix(0, p_dim, p_dim)
     s_yty <- matrix(0, p_dim, p_dim)
@@ -164,12 +153,7 @@ mcem_cgd_poisson <- function(Y_list,
       model_list[[subj]]$T[, , 1] <- Gamma
       model_list[[subj]]$Q[, , 1] <- Q_mat
 
-      estep_out <- poisson_estep_subject(
-        model_subj = model_list[[subj]],
-        T_len = T_len,
-        p_dim = p_dim,
-        nsim = n_samples
-      )
+      estep_out <- poisson_estep_subject(model_subj = model_list[[subj]],T_len = T_len,p_dim = p_dim,nsim = n_samples)
 
       s_xtx <- s_xtx + estep_out$s_xtx
       s_xty <- s_xty + estep_out$s_xty
@@ -184,13 +168,7 @@ mcem_cgd_poisson <- function(Y_list,
     # Gamma update
     eff_lam_gamma <- if (iter <= early_iter_gamma) early_lambda_gamma else lambda_gamma
 
-    Beta_new <- run_cgd_scad(
-      XtX = s_xtx,
-      XtY = t(s_xty),
-      Beta_init = t(Gamma),
-      lambda = eff_lam_gamma,
-      n = N_eff
-    )
+    Beta_new <- run_cgd_scad(XtX = s_xtx,XtY = t(s_xty),Beta_init = t(Gamma),lambda = eff_lam_gamma,n = N_eff)
     Gamma <- t(Beta_new)
 
     # Theta update
@@ -200,13 +178,8 @@ mcem_cgd_poisson <- function(Y_list,
 
     eff_lam_theta <- if (iter <= early_iter_theta) early_lambda_theta else lambda_theta
 
-    g_fit <- tryCatch(
-      glasso::glasso(S_cov, rho = eff_lam_theta),
-      error = function(e) {
-        glasso::glasso(make_pd(S_cov, ridge = 1e-5), rho = eff_lam_theta)
-      }
-    )
-
+    g_fit <- tryCatch(glasso::glasso(S_cov, rho = eff_lam_theta),
+      error = function(e) {glasso::glasso(make_pd(S_cov, ridge = 1e-5), rho = eff_lam_theta)})
     Theta <- make_pd(g_fit$wi, ridge = 1e-6)
 
     # convergence checks
@@ -219,8 +192,7 @@ mcem_cgd_poisson <- function(Y_list,
     ld <- determinant(Theta, logarithm = TRUE)
     logdet_theta <- if (ld$sign <= 0) NA else as.numeric(ld$modulus)
 
-    q_hist[iter] <- 0.5 * sum(diag(Gamma %*% s_xtx %*% t(Gamma))) -
-      sum(diag(Gamma %*% t(s_xty))) +
+    q_hist[iter] <- 0.5 * sum(diag(Gamma %*% s_xtx %*% t(Gamma))) -sum(diag(Gamma %*% t(s_xty))) +
       N_eff * (sum(diag(S_cov %*% Theta)) - ifelse(is.na(logdet_theta), 0, logdet_theta))
 
     Gamma_prev <- Gamma
@@ -232,7 +204,7 @@ mcem_cgd_poisson <- function(Y_list,
   q_hist <- na.omit(q_hist)
   ess_hist <- na.omit(ess_hist)
 
-  # approximate BIC using each subject's KFAS log-likelihood at the final params
+  
   df_gamma <- sum(abs(Gamma) > 1e-4)
   df_theta <- sum(abs(Theta[upper.tri(Theta, diag = FALSE)]) > 1e-4)
   df_total <- df_gamma + df_theta
@@ -244,11 +216,8 @@ mcem_cgd_poisson <- function(Y_list,
   for (subj in seq_len(n_subjects)) {
     model_list[[subj]]$T[, , 1] <- Gamma
     model_list[[subj]]$Q[, , 1] <- Q_mat_final
-
-    subj_ll <- tryCatch(
-      as.numeric(logLik(model_list[[subj]], nsim = 0)),
-      error = function(e) NA_real_
-    )
+    subj_ll <- tryCatch(as.numeric(logLik(model_list[[subj]], nsim = 0)),
+      error = function(e) NA_real_)
 
     if (is.na(subj_ll) || !is.finite(subj_ll)) {
       total_logLik <- NA_real_
@@ -258,16 +227,13 @@ mcem_cgd_poisson <- function(Y_list,
     }
   }
 
+  #Compute BIC via ebic
   bic_score <- Inf
   if (!is.na(total_logLik) && is.finite(total_logLik)) {
     N_total <- n_subjects * T_len
-    bic_score <- -2 * total_logLik +
-      df_total * log(N_total) +
-      2 * ebic_gamma * df_total * log(p_dim)
+    bic_score <- -2 * total_logLik +df_total * log(N_total) + 2 * ebic_gamma * df_total * log(p_dim)
   }
 
-  list(Gamma = Gamma, Theta = Theta,
-       BIC = bic_score,
-       conv_gamma = conv_hist_gamma, conv_theta = conv_hist_theta,
-       q_proxy = q_hist, ess_hist = ess_hist)
+  list(Gamma = Gamma, Theta = Theta,BIC = bic_score,
+       conv_gamma = conv_hist_gamma, conv_theta = conv_hist_theta)
 }

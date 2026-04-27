@@ -1,27 +1,22 @@
 # MCEM with CGD for binary outcomes.
-# E-step: latent normals truncated by sign of Y, sampled via Kalman simulation smoother.
+# E-step: binary outcome by probit link
 # M-step: SCAD-penalized CGD for Gamma; glasso for Theta.
 #
 # Requires:
-# R/common/utils.R      
+# R/common/helper.R      
 # R/common/evaluation.R  
 
 library(glasso)
 library(truncnorm)
 library(KFAS)
 
-mcem_cgd_binary <- function(Y_list,
-                            lambda_gamma, lambda_theta,
-                            max_iter = 30, n_samples = 50, burn_in = 10,
-                            ebic_gamma = 0.5, tol = 1e-2,
+mcem_cgd_binary <- function(Y_list,lambda_gamma, lambda_theta,
+                            max_iter = 30, n_samples = 50, burn_in = 10,ebic_gamma = 0.5, tol = 1e-2,
                             gamma_init = NULL, theta_init = NULL) {
 
-  # warm-start regularization, small lambdas in early iters
-  early_lambda_gamma <- 0.05
-  early_lambda_theta <- 0.05
-  early_iter_gamma <- 5
-  early_iter_theta <- 5
-  p1_scale <- 20
+  # warm-start regularization
+  early_lambda_gamma <- 0.05;early_lambda_theta <- 0.05
+  early_iter_gamma <- 5;early_iter_theta <- 5; p1_scale <- 20
 
   stopifnot(is.list(Y_list), length(Y_list) >= 1)
 
@@ -68,7 +63,6 @@ mcem_cgd_binary <- function(Y_list,
     for (subj in seq_len(n_subjects)) {
       Y_curr <- as.matrix(Y_list[[subj]])
       Z_curr <- Z_list[[subj]]
-
       sub_s_xtx <- matrix(0, p_dim, p_dim)
       sub_s_xty <- matrix(0, p_dim, p_dim)
       sub_s_yty <- matrix(0, p_dim, p_dim)
@@ -101,8 +95,6 @@ mcem_cgd_binary <- function(Y_list,
         }
 
         Z_curr <- Z_draw
-
-        # accumulate sufficient statistics
         if (m > burn_in) {
           Z_t   <- Z_draw[2:T_len, , drop = FALSE]
           Z_tm1 <- Z_draw[1:(T_len - 1), , drop = FALSE]
@@ -125,7 +117,6 @@ mcem_cgd_binary <- function(Y_list,
 
     # Gamma update
     eff_lam_gamma <- if (iter <= early_iter_gamma) early_lambda_gamma else lambda_gamma
-
     Beta_new <- run_cgd_scad(XtX = s_xtx, XtY = t(s_xty), Beta_init = t(Gamma), lambda = eff_lam_gamma, n = N_eff)
     Gamma <- t(Beta_new)
 
@@ -136,7 +127,6 @@ mcem_cgd_binary <- function(Y_list,
     S_cov <- make_pd(S_resid / N_eff, ridge = 1e-6)
 
     eff_lam_theta <- if (iter <= early_iter_theta) early_lambda_theta else lambda_theta
-
     g_fit <- tryCatch(glasso::glasso(S_cov, rho = eff_lam_theta),
                       error = function(e) {glasso::glasso(make_pd(S_cov, ridge = 1e-6 * 10), rho = eff_lam_theta)})
 
@@ -178,6 +168,7 @@ mcem_cgd_binary <- function(Y_list,
   ld_final <- determinant(Theta, logarithm = TRUE)
   logdet_theta <- if (ld_final$sign <= 0) NA else as.numeric(ld_final$modulus)
 
+  #Compute BIC via ebic
   bic_score <- Inf
   if (!is.na(logdet_theta)) {
     neg_2_logL_proxy <- N_eff * (sum(diag((final_S_resid / N_eff) %*% Theta)) - logdet_theta)

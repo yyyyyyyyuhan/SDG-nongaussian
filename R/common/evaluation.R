@@ -1,4 +1,4 @@
-# sparsity-recovery metrics: SEN, SPE, MCC, F1
+# metrics: SEN, SPE, MCC, F1
 # off-diagonal upper triangle for symmetric Theta, full matrix for Gamma
 
 calc_metrics <- function(est_mat, true_mat, type = c("Theta", "Gamma"), threshold = 0.01) {
@@ -8,7 +8,7 @@ calc_metrics <- function(est_mat, true_mat, type = c("Theta", "Gamma"), threshol
   true_mat <- as.matrix(true_mat)
 
   if (!all(dim(est_mat) == dim(true_mat))) {
-    stop(sprintf("Dimension mismatch in calc_metrics(type='%s').", type))
+    stop("Dimension mismatch")
   }
 
   if (type == "Theta") {

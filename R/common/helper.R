@@ -1,16 +1,12 @@
-# utility functions shared across binary / poisson / multinomial pipelines
+# helper functions 
 
 make_pd <- function(S, ridge = 1e-4, eps = 1e-8) {
   S <- (S + t(S)) / 2
   n <- nrow(S)
-
   S2 <- S + diag(ridge, n)
-
   ok <- TRUE
   tryCatch(chol(S2), error = function(e) ok <<- FALSE)
   if (ok) return(S2)
-
-  # fall back to eigen-floor when Cholesky fails
   eig <- eigen(S2, symmetric = TRUE)
   vals <- pmax(eig$values, eps)
   S3 <- eig$vectors %*% diag(vals, n) %*% t(eig$vectors)
@@ -23,7 +19,6 @@ solve_pd <- function(S, ridge = 1e-6) {
 
 scad_prox <- function(z, lambda, a = 3.7) {
   if (lambda <= 1e-10) return(z)
-
   abs_z <- abs(z)
   res <- z
 
@@ -36,7 +31,6 @@ scad_prox <- function(z, lambda, a = 3.7) {
   if (any(idx2)) {
     res[idx2] <- ((a - 1) * z[idx2] - sign(z[idx2]) * a * lambda) / (a - 2)
   }
-
   res
 }
 
@@ -71,6 +65,5 @@ run_cgd_scad <- function(XtX, XtY, Beta_init, lambda, n) {
 
     Beta[, j] <- beta_j
   }
-
   Beta
 }
