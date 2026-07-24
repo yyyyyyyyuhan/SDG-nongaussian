@@ -1,5 +1,5 @@
-# Poisson outcome
-# usage: Rscript simulations/run_one_job_poisson.R <structure> <lam_g> <lam_t>
+# multinomial outcome
+# usage: Rscript simulations/run_one_job_multinomial.R <structure> <lam_g> <lam_t>
 
 args <- commandArgs(trailingOnly = TRUE)
 structure <- as.character(args[1])
@@ -11,18 +11,19 @@ library(Matrix)
 source("R/common/helper.R")
 source("R/common/evaluation.R")
 source("R/common/structures.R")
-source("R/poisson/mcem_cgd.R")
-source("R/poisson/generate_data.R")
+source("R/multinomial/mcem_cgd.R")
+source("R/multinomial/generate_data.R")
 
-data <- generate_data(n_subjects = 100, T_len = 10, p_dim = 10, structure_type = structure)
+data <- generate_data_multinom(n_subjects = 100, T_len = 10, p_dim = 10,
+                               structure_type = structure, total_count = 100)
 
 Y_list <- data$Y_list
 true_G <- data$True_Gamma
 true_T <- data$True_Theta
 
 fit <- tryCatch(
-  mcem_cgd_poisson(Y_list = Y_list, lambda_gamma = lam_g, lambda_theta = lam_t,
-                   max_iter = 100, n_samples = 100),
+  mcem_cgd_multinom(Y_list = data$Y_list,lambda_gamma = lam_g,lambda_theta = lam_t,
+                    max_iter = 100,n_samples = 100),
   error = function(e) {
     message("Error at structure=", structure, " lam_g=", lam_g, " lam_t=", lam_t)
     message(e$message)

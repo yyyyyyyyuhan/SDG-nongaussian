@@ -1,9 +1,8 @@
+#process raw data to make the multinomial data.
+
 depth <- 100  
 
-N <- dim(Y_array)[1]
-T_len <- dim(Y_array)[2]
-K <- dim(Y_array)[3]   
-
+N <- dim(Y_array)[1];T_len <- dim(Y_array)[2];K <- dim(Y_array)[3]   
 
 Y_prop <- Y_array
 for (i in 1:N) for (t in 1:T_len) {

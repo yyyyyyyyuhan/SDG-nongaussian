@@ -12,7 +12,8 @@ library(KFAS)
 
 mcem_cgd_binary <- function(Y_list,lambda_gamma, lambda_theta,
                             max_iter = 30, n_samples = 50, burn_in = 10,ebic_gamma = 0.5, tol = 1e-2,
-                            gamma_init = NULL, theta_init = NULL) {
+                            gamma_init = NULL, theta_init = NULL,
+                            early_stop = FALSE) {
 
   # warm-start regularization
   early_lambda_gamma <- 0.05;early_lambda_theta <- 0.05
@@ -146,10 +147,9 @@ mcem_cgd_binary <- function(Y_list,lambda_gamma, lambda_theta,
       sum(diag(Gamma %*% t(s_xty))) +
       N_eff * (sum(diag(S_cov %*% Theta)) - ifelse(is.na(logdet_theta), 0, logdet_theta))
 
-    if (iter >= 5 && diff_gamma < tol && diff_theta < tol) {
-      conv_hist_gamma <- conv_hist_gamma[seq_len(iter)]
-      conv_hist_theta <- conv_hist_theta[seq_len(iter)]
-      q_hist <- q_hist[seq_len(iter)]
+    if (early_stop && iter >= 5 && diff_gamma < tol && diff_theta < tol) {
+      Gamma_prev <- Gamma
+      Theta_prev <- Theta
       break
     }
 

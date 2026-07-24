@@ -1,5 +1,5 @@
 # Theta / Omega / Gamma generation for the 6 graph structures used across all outcomes.
-# Theta is the precision matrix, Omega = Theta^{-1} the covariance.
+# Theta is the precision matrix, Omega = Theta^{-1} the covariance matrix.
 
 build_precision <- function(p_dim, structure_type) {
   Theta <- matrix(0, p_dim, p_dim)

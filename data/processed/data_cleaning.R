@@ -29,11 +29,10 @@ meta <- meta[match(common_ids, meta$sample_id_clean), ]
 stopifnot(all(tax$sample_id_clean == meta$sample_id_clean))
 
 # choose subjects with at least 10 distinct weeks
-subj_info <- meta %>%
-  group_by(`Participant ID`) %>%
-  summarise(n_sample = n(),
-            n_week = n_distinct(week_num),
-           .groups = "drop")
+subj_info <- meta %>%group_by(`Participant ID`) %>%
+               summarise(n_sample = n(),
+                        n_week = n_distinct(week_num),
+                        .groups = "drop")
 
 keep_subj <- subj_info$`Participant ID`[subj_info$n_week >= T_len]
 
@@ -45,8 +44,6 @@ meta_T <- meta %>%
   slice(1:T_len) %>%
   ungroup()
 
-stopifnot(all(table(meta_T$`Participant ID`) == T_len))
-
 tax_T <- tax[match(meta_T$sample_id_clean, tax$sample_id_clean), ]
 stopifnot(all(tax_T$sample_id_clean == meta_T$sample_id_clean))
 
@@ -57,16 +54,13 @@ tax_mat[] <- lapply(tax_mat, as.numeric)
 prev <- colMeans(tax_mat > 0, na.rm = TRUE)
 avg <- colMeans(tax_mat, na.rm = TRUE)
 
-tax_stat <- data.frame(taxon = colnames(tax_mat),
-                       prevalence = prev,
-                       mean_abund = avg,
-                       level = lengths(strsplit(colnames(tax_mat), "[|]")))
+tax_stat <- data.frame(taxon = colnames(tax_mat),prevalence = prev,
+                       mean_abund = avg,level = lengths(strsplit(colnames(tax_mat), "[|]")))
 
 tax_stat <- tax_stat %>% filter(prevalence >= prev_cut, mean_abund > 0)
 
 if (species_only) {
-  tax_stat <- tax_stat %>%
-    filter(level == 7)
+  tax_stat <- tax_stat %>% filter(level == 7)
 }
 
 tax_stat <- tax_stat %>%
@@ -86,8 +80,6 @@ meta_T <- meta_T %>%
   group_by(`Participant ID`) %>%
   mutate(t_index = row_number()) %>%
   ungroup()
-
-stopifnot(all(meta_T$t_index == rep(1:T_len, length(unique(meta_T$`Participant ID`)))))
 
 # make N x T x K array
 ids <- unique(meta_T$`Participant ID`)

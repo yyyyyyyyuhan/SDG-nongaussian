@@ -175,7 +175,7 @@ for (i in 1:p) {
   
   th2 <- base+2*pi-gap
   xe2 <- lx+rr*cos(th2); ye2 <- ly+rr*sin(th2)
-  tx  <- -sin(th2);       ty  <-  cos(th2)
+  tx  <- -sin(th2); ty  <-  cos(th2)
   arrows(xe2-tx*0.02, ye2-ty*0.02, xe2, ye2,
          length=0.07, angle=25, lwd=this_lwd, col=this_col)
 }
