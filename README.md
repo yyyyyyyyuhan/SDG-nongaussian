@@ -17,5 +17,6 @@ Comparison of Θ and Γ recovery across different graphical structures and outco
 Work in progress. Code will be uploaded incrementally.
 
 ## Author
-Yuhan Zheng and Claudia Solis-Lemus
+Yuhan Zheng and Claudia Solis-Lemus 
+
 Department of Statistics, University of  Wisconsin-Madison 
