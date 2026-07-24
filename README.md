@@ -5,8 +5,8 @@ Comparison of Θ and Γ recovery across different graphical structures and outco
 ## Project Structure
 
 - `R/` — Core method implementations.
-- `simulations/` — Simulation scripts for binary, Poisson, multinomial outcomes.
-- `scripts/` — Plotting and analysis scripts.
+- `sim/` — Simulation scripts for binary, Poisson, multinomial outcomes.
+- `plots/` — Plotting scripts.
 - `data/` — Raw and processed data.
 - `results/` — Output tables and figures.
 - `paper/` — Manuscript files.
@@ -17,4 +17,5 @@ Comparison of Θ and Γ recovery across different graphical structures and outco
 Work in progress. Code will be uploaded incrementally.
 
 ## Author
-
+Yuhan Zheng and Claudia Solis-Lemus
+Department of Statistics, University of  Wisconsin-Madison 
