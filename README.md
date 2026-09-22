@@ -1,6 +1,6 @@
 # Project Name
 
-A latent Gaussian dynamic graphical model for longitudinal non-Gaussian outcomes.
+Sparse dynamic graphical models for longitudinal non-Gaussian data
 
 ## Project Structure
 
