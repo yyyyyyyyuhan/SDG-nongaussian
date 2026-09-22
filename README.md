@@ -1,23 +1,22 @@
 # Project Name
 
-Comparison of Θ and Γ recovery across different graphical structures and outcome types.
+A latent Gaussian dynamic graphical model for longitudinal non-Gaussian outcomes.
 
 ## Project Structure
 
-- `R/` — Core method implementations.
-- `sim/` — Simulation scripts for binary, Poisson, multinomial outcomes.
+- `R/` — Core method implementations for three non-gaussian outcomes.
+- `sim/` — Simulation scripts for binary, counts, compositional outcomes.
 - `plots/` — Plotting scripts.
-- `data/` — Raw and processed data.
-- `results/` — Output tables and figures.
+- `data/` — Raw and processed data for Human Microbiome Project (HMP2).
+- `results/` — Output figures for temporal dependence matrix and comtemporaneous conditional dependence matrix.
 - `paper/` — Manuscript files.
 
 
-## Status
-
-Work in progress. Code will be uploaded incrementally.
 
 ## Author
 
 Yuhan Zheng and Claudia Solis-Lemus 
 
 Department of Statistics, University of  Wisconsin-Madison 
+
+Wisconsin Institute for Discovery, University of Wisconsin-Madison
