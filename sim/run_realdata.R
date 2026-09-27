@@ -4,12 +4,12 @@ lam_g <- as.numeric(args[1])
 lam_t <- as.numeric(args[2])
 
 library(Matrix)
-source("R/multinomial/mcem_cgd.R")
+source("R/compositional/mcem_cgd.R")
 load("data/processed/hmp2_baseline.RData") 
 
 fit <- mcem_cgd_multinom(Y_list = Y_list,lambda_gamma = lam_g,
                          lambda_theta = lam_t,n_samples = 100,
-                         max_iter = 10)
+                         max_iter = 100)
 
 out <- data.frame(
   Lam_G = lam_g, Lam_T = lam_t,

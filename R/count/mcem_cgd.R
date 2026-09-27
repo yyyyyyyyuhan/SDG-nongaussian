@@ -1,5 +1,5 @@
-# MCEM with CGD for Poisson outcomes.
-# E-step: Poisson observation family.
+# Count outcomes.
+# E-step: Count observation family.
 # M-step: SCAD-penalized CGD for Gamma; glasso for Theta.
 #
 # Requires:
@@ -97,11 +97,10 @@ poisson_estep_subject <- function(model_subj, T_len, p_dim, nsim, max_try = 3) {
 
 
 mcem_cgd_poisson <- function(Y_list,lambda_gamma,lambda_theta,
-                             max_iter = 30,n_samples = 50,
+                             max_iter = 100,n_samples = 100,
                              ebic_gamma = 0.5,tol = 1e-2,
                              gamma_init = NULL,theta_init = NULL,
-                             p1_scale = 20,
-                             early_stop = FALSE) {
+                             p1_scale = 20,early_stop = FALSE) {
 
   early_lambda_gamma <- 0.05;early_lambda_theta <- 0.05
   early_iter_gamma <- 5;early_iter_theta <- 5
@@ -117,7 +116,7 @@ mcem_cgd_poisson <- function(Y_list,lambda_gamma,lambda_theta,
   for (i in seq_len(n_subjects)) {
     Y_list[[i]] <- as.matrix(Y_list[[i]])
     stopifnot(nrow(Y_list[[i]]) == T_len, ncol(Y_list[[i]]) == p_dim)
-    if (any(Y_list[[i]] < 0)) stop("Poisson outcomes must be nonnegative.")
+    if (any(Y_list[[i]] < 0)) stop("Count outcomes must be nonnegative.")
   }
 
   Gamma <- if (is.null(gamma_init)) diag(0.5, p_dim) else as.matrix(gamma_init)
@@ -155,13 +154,12 @@ mcem_cgd_poisson <- function(Y_list,lambda_gamma,lambda_theta,
       model_list[[subj]]$T[, , 1] <- Gamma
       model_list[[subj]]$Q[, , 1] <- Q_mat
       estep_out <- poisson_estep_subject(model_subj = model_list[[subj]],T_len = T_len,p_dim = p_dim,nsim = n_samples)
-
+      
       s_xtx <- s_xtx + estep_out$s_xtx
       s_xty <- s_xty + estep_out$s_xty
       s_yty <- s_yty + estep_out$s_yty
-      ess_vec[subj] <- estep_out$ess
     }
-
+    
     s_xtx <- (s_xtx + t(s_xtx)) / 2
     s_yty <- (s_yty + t(s_yty)) / 2
     ess_hist[iter] <- mean(ess_vec)
@@ -195,22 +193,20 @@ mcem_cgd_poisson <- function(Y_list,lambda_gamma,lambda_theta,
     q_hist[iter] <- 0.5 * sum(diag(Gamma %*% s_xtx %*% t(Gamma))) -sum(diag(Gamma %*% t(s_xty))) +
       N_eff * (sum(diag(S_cov %*% Theta)) - ifelse(is.na(logdet_theta), 0, logdet_theta))
 
-    if (early_stop && iter >= 5 && diff_gamma < tol && diff_theta < tol) {
+    if (early_stop && iter > max(early_iter_gamma, early_iter_theta) &&
+        diff_gamma < tol && diff_theta < tol) {
       Gamma_prev <- Gamma
       Theta_prev <- Theta
       break
     }
-
+    
     Gamma_prev <- Gamma
     Theta_prev <- Theta
   }
 
   conv_hist_gamma <- na.omit(conv_hist_gamma)
   conv_hist_theta <- na.omit(conv_hist_theta)
-  q_hist <- na.omit(q_hist)
-  ess_hist <- na.omit(ess_hist)
 
-  
   df_gamma <- sum(abs(Gamma) > 1e-4)
   df_theta <- sum(abs(Theta[upper.tri(Theta, diag = FALSE)]) > 1e-4)
   df_total <- df_gamma + df_theta

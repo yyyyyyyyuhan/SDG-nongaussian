@@ -1,5 +1,5 @@
-# MCEM with CGD for multinomial outcomes 
-# E-step: multinomial outcomes
+# Compositional outcomes 
+# E-step: compositional outcomes
 # M-step: SCAD-penalized CGD for Gamma; glasso for Theta.
 #
 # Requires:
@@ -37,9 +37,8 @@ estep_multinom_mcem <- function(Y, Gamma, Theta, n_samples,
                                 Z_init = NULL,m0 = NULL, P0 = NULL,
                                 max_inner = 30,tol_inner = 1e-5,
                                 ridge = 1e-6) {
-  T_len <- nrow(Y)
-  K <- ncol(Y)
-  d <- K - 1
+  
+  T_len <- nrow(Y); K <- ncol(Y); d <- K - 1
 
   if (is.null(Z_init)) Z_ref <- init_Z_from_counts(Y) else Z_ref <- Z_init
   if (is.null(m0)) m0 <- rep(0, d)
@@ -48,7 +47,7 @@ estep_multinom_mcem <- function(Y, Gamma, Theta, n_samples,
   Q <- solve_pd(Theta, ridge = ridge)
 
   step_size <- 0.3;z_cap <- 8
-  divergence_cap <- 1e4;info_floor <- 1e-2
+  divergence_cap <- 1e4; info_floor <- 1e-2
 
   last_diff <- NA_real_
   model_last <- NULL
@@ -239,12 +238,11 @@ estep_multinom_mcem <- function(Y, Gamma, Theta, n_samples,
 }
 
 mcem_cgd_multinom <- function(Y_list,lambda_gamma, lambda_theta,
-                              n_samples = 100, max_iter = 30, ebic_gamma = 0.5,
+                              n_samples = 100, max_iter = 100, ebic_gamma = 0.5,
                               tol = 1e-2, gamma_init = NULL, theta_init = NULL,
                               early_stop = FALSE) {
-  max_inner <- 30
-  tol_inner <- 1e-5
-  ridge <- 1e-6
+  
+  max_inner <- 30; tol_inner <- 1e-5;ridge <- 1e-6
 
   Y_list <- lapply(Y_list, as.matrix)
   K <- ncol(Y_list[[1]])
@@ -258,8 +256,8 @@ mcem_cgd_multinom <- function(Y_list,lambda_gamma, lambda_theta,
   }
 
   #warm start
-  early_lambda_gamma <- 0.05;early_lambda_theta <- 0.05
-  early_iter_gamma <- 5;early_iter_theta <- 5
+  early_lambda_gamma <- 0.05; early_lambda_theta <- 0.05
+  early_iter_gamma <- 5; early_iter_theta <- 5
 
   n_subjects <- length(Y_list)
   d <- K - 1
@@ -276,7 +274,6 @@ mcem_cgd_multinom <- function(Y_list,lambda_gamma, lambda_theta,
 
   conv_hist_gamma <- rep(NA_real_, max_iter)
   conv_hist_theta <- rep(NA_real_, max_iter)
-  q_hist <- rep(NA_real_, max_iter)
   ess_hist <- rep(NA_real_, max_iter)
 
   final_S_resid <- diag(1, d)
@@ -336,12 +333,6 @@ mcem_cgd_multinom <- function(Y_list,lambda_gamma, lambda_theta,
     diag(Theta) <- diag(Theta) + ridge
     final_S_resid <- S_resid
 
-    ld <- determinant(Theta, logarithm = TRUE)
-    logdet_theta <- if (ld$sign <= 0) NA_real_ else as.numeric(ld$modulus)
-
-    q_hist[iter] <- 0.5 * sum(diag(Gamma %*% s_xtx %*% t(Gamma))) -
-      sum(diag(Gamma %*% t(s_xty))) + N_eff * (sum(diag(S_cov %*% Theta)) -ifelse(is.na(logdet_theta), 0, logdet_theta))
-    
     #convergence check
     diff_gamma <- norm(Gamma - Gamma_prev, type = "F") / (norm(Gamma_prev, type = "F") + 1e-10)
     diff_theta <- norm(Theta - Theta_prev, type = "F") / (norm(Theta_prev, type = "F") + 1e-10)
@@ -352,19 +343,19 @@ mcem_cgd_multinom <- function(Y_list,lambda_gamma, lambda_theta,
     last_estep_list <- estep_list
     Z_init_list <- lapply(estep_list, function(x) x$Z_mean)
 
-    if (early_stop && iter >= 5 && diff_gamma < tol && diff_theta < tol) {
+    if (early_stop && iter > max(early_iter_gamma, early_iter_theta) &&
+        diff_gamma < tol && diff_theta < tol) {
       Gamma_prev <- Gamma
       Theta_prev <- Theta
       break
     }
-
+    
     Gamma_prev <- Gamma
     Theta_prev <- Theta
   }
 
   conv_hist_gamma <- stats::na.omit(conv_hist_gamma)
   conv_hist_theta <- stats::na.omit(conv_hist_theta)
-  q_hist <- stats::na.omit(q_hist)
   ess_hist <- stats::na.omit(ess_hist)
 
   df_gamma <- sum(abs(Gamma) > 1e-4)
@@ -391,5 +382,6 @@ mcem_cgd_multinom <- function(Y_list,lambda_gamma, lambda_theta,
   }
 
   list(Gamma = Gamma, Theta = Theta,BIC = bic_score,
-       conv_gamma = conv_hist_gamma, conv_theta = conv_hist_theta)
+       conv_gamma = conv_hist_gamma, conv_theta = conv_hist_theta,
+       ess = ess_hist, subject_fits = subject_fits)
 }

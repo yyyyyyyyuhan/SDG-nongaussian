@@ -1,4 +1,4 @@
-# Project Name
+## Sparse dynamic graphical models for longitudinal non-Gaussian data 
 
 Sparse dynamic graphical models for longitudinal non-Gaussian data
 
@@ -9,7 +9,6 @@ Sparse dynamic graphical models for longitudinal non-Gaussian data
 - `plots/` — Plotting scripts.
 - `data/` — Raw data, processed data and codes for Human Microbiome Project (HMP2).
 - `results/` — Output figures for temporal dependence matrix and comtemporaneous conditional dependence matrix.
-- `paper/` — Manuscript files.
 
 
 

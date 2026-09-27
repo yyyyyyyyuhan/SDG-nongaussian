@@ -17,8 +17,8 @@ softmax_baseline <- function(z, eps = 1e-8) {
   p / sum(p)
 }
 
-generate_data_multinom <- function(n_subjects = 50,T_len = 50,p_dim = 10,
-                                   structure_type = "AR1",total_count = 20,
+generate_data_multinom <- function(n_subjects = 100,T_len = 10,p_dim = 10,
+                                   structure_type = "AR1",total_count = 100,
                                    burn_in = 50,intercept = 0,
                                    eta = 10) {
 

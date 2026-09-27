@@ -11,8 +11,10 @@ library(Matrix)
 source("R/common/helper.R")
 source("R/common/evaluation.R")
 source("R/common/structures.R")
-source("R/poisson/mcem_cgd.R")
-source("R/poisson/generate_data.R")
+source("R/count/mcem_cgd.R")
+source("R/count/generate_data.R")
+
+set.seed(123)
 
 data <- generate_data_poisson(n_subjects = 100, T_len = 10, p_dim = 10, structure_type = structure)
 

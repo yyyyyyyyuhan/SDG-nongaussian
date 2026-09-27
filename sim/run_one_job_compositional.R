@@ -1,4 +1,4 @@
-# multinomial outcome
+# composition outcome
 # usage: Rscript simulations/run_one_job_multinomial.R <structure> <lam_g> <lam_t>
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -11,8 +11,10 @@ library(Matrix)
 source("R/common/helper.R")
 source("R/common/evaluation.R")
 source("R/common/structures.R")
-source("R/multinomial/mcem_cgd.R")
-source("R/multinomial/generate_data.R")
+source("R/compositional/mcem_cgd.R")
+source("R/compositional/generate_data.R")
+
+set.seed(123)
 
 data <- generate_data_multinom(n_subjects = 100, T_len = 10, p_dim = 10,
                                structure_type = structure, total_count = 100)

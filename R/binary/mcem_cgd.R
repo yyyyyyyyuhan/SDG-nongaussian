@@ -1,4 +1,4 @@
-# MCEM with CGD for binary outcomes.
+# binary outcomes.
 # E-step: binary outcome by probit link
 # M-step: SCAD-penalized CGD for Gamma; glasso for Theta.
 #
@@ -11,7 +11,7 @@ library(truncnorm)
 library(KFAS)
 
 mcem_cgd_binary <- function(Y_list,lambda_gamma, lambda_theta,
-                            max_iter = 30, n_samples = 50, burn_in = 10,ebic_gamma = 0.5, tol = 1e-2,
+                            max_iter = 100, n_samples = 100, burn_in = 10,ebic_gamma = 0.5, tol = 1e-2,
                             gamma_init = NULL, theta_init = NULL,
                             early_stop = FALSE) {
 
@@ -29,8 +29,7 @@ mcem_cgd_binary <- function(Y_list,lambda_gamma, lambda_theta,
   Gamma <- if (is.null(gamma_init)) diag(0.5, p_dim) else as.matrix(gamma_init)
   Theta <- if (is.null(theta_init)) diag(1, p_dim) else make_pd(as.matrix(theta_init), ridge = 1e-6)
 
-  Gamma_prev <- Gamma
-  Theta_prev <- Theta
+  Gamma_prev <- Gamma; Theta_prev <- Theta
 
   Z_list <- lapply(seq_len(n_subjects), function(i) matrix(0, T_len, p_dim))
   Y_dummy <- matrix(0, T_len, p_dim)
@@ -147,12 +146,13 @@ mcem_cgd_binary <- function(Y_list,lambda_gamma, lambda_theta,
       sum(diag(Gamma %*% t(s_xty))) +
       N_eff * (sum(diag(S_cov %*% Theta)) - ifelse(is.na(logdet_theta), 0, logdet_theta))
 
-    if (early_stop && iter >= 5 && diff_gamma < tol && diff_theta < tol) {
+    if (early_stop && iter > max(early_iter_gamma, early_iter_theta) &&
+        diff_gamma < tol && diff_theta < tol) {
       Gamma_prev <- Gamma
       Theta_prev <- Theta
       break
     }
-
+    
     Gamma_prev <- Gamma
     Theta_prev <- Theta
   }

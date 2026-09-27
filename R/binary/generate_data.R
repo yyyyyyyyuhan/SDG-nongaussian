@@ -7,7 +7,7 @@ library(mvtnorm)
 
 set.seed(123)
 
-generate_data <- function(n_subjects = 50, T_len = 50, p_dim = 10, structure_type = "AR1") {
+generate_data <- function(n_subjects = 100, T_len = 10, p_dim = 10, structure_type = "AR1") {
 
   pr <- build_precision(p_dim, structure_type)
   Theta <- pr$Theta

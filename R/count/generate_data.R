@@ -8,11 +8,8 @@ library(mvtnorm)
 
 set.seed(123)
 
-generate_data_poisson <- function(n_subjects = 50,
-                                  T_len = 50,
-                                  p_dim = 10,
-                                  structure_type = "AR1",
-                                  intercept = 0) {
+generate_data_poisson <- function(n_subjects = 100,T_len = 10,p_dim = 10,
+                                  structure_type = "AR1",intercept = 0) {
 
   pr <- build_precision(p_dim, structure_type)
   Theta <- pr$Theta
@@ -20,9 +17,7 @@ generate_data_poisson <- function(n_subjects = 50,
 
   Gamma <- build_gamma(p_dim)
 
-  Y_list <- list()
-  Z_list <- list()
-  Lambda_list <- list()
+  Y_list <- list();Z_list <- list();Lambda_list <- list()
 
   for (i in 1:n_subjects) {
     Z_true <- simulate_latent_var1(T_len, p_dim, Gamma, Omega, burn_in = 50)
